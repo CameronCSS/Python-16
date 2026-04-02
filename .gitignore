@@ -1,0 +1,7 @@
+*.json
+__pycache__/
+<<<<<<< HEAD
+*.pyc
+=======
+*.pyc
+>>>>>>> 8b5a5aadc78b46d57682a5ed131ae848e376a7b5

@@ -4,7 +4,7 @@
 <br />
 
 
-<h2 align="center">Python in 16 Days <br> (Udemy Course)</h2>
+<h2 align="center">Master Python in 16 Days <br> (Udemy Course)</h2>
 
 <p align="center">
   <img height="200" alt="python logo" src="https://www.python.org/static/community_logos/python-logo-master-v3-TM.png" />
@@ -17,7 +17,8 @@
 
 
 > [!NOTE]
-> This repo follows the **Python in 16 Days** course on Udemy. The goal is to rebuild a strong Python foundation after a period focused on Java and JavaScript.
+> This repo follows the [**Python in 16 Days**](https://www.udemy.com/course/total-python/?srsltid=AfmBOorMO4fpAf_zUoZ-rVI5FklsqUAt7FgQeHJRmzuGhbB4QpvQECAB) course on Udemy. The goal is to rebuild a strong Python foundation after a period focused on Java and JavaScript.
+>
 
 ---
 
