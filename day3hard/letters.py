@@ -6,8 +6,9 @@ def letter_list():
     letter_dict = {3: "first", 2: "second", 1: "third"}
     letters = []
     num = 3
+    print("\nEnter letters to count in your text:")
+    
     while num > 0:
-        print("\nEnter letters to count in your text:")
         letter = input(f"Enter the {letter_dict[num]} letter: ").lower()
 
         # Validate: reject if a number

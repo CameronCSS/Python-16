@@ -38,3 +38,4 @@ def section_break():
     print(spacer())
     to_continue()
     clear()
+    header()
