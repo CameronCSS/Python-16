@@ -8,8 +8,9 @@ def word_count(words):
     return word_count
 
 def reverse(words):
-    words.reverse()
-    reversed = " ".join(words)
+    reverse_word = words
+    reverse_word.reverse()
+    reversed = " ".join(reverse_word)
     
     return reversed
 
@@ -70,6 +71,6 @@ def title_case(words):
     for word in words:
         new_word = word[0].upper() + word[1:]
         
-        upper_words.append(new_word)
+        upper_words.insert(0, new_word)
     
     return upper_words
