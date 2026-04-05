@@ -7,29 +7,19 @@ def word_count(words):
     # Print the count
     return word_count
 
-def reverse(words):
-    reverse_word = words
-    reverse_word.reverse()
-    reversed = " ".join(reverse_word)
+def reverse_the_words(words):
+    reversed_words = words.copy()
+    reversed_words.reverse()
+    reversed = " ".join(reversed_words)
     
     return reversed
 
 def find_python(words):
-    python = False
-    had_python = {True : "had", False : "did not have"}
-    if "python" in words:
-        python = True
-    
-    python_count = 0
-    for word in words:
-        if word == "python":
-            python_count += 1
+    python_count = words.count("python")
     if python_count > 0:
-        text = f"Your text {had_python[python]} Python in it [{python_count}] times."
+        return f"Your text had Python in it [{python_count}] times."
     else:
-        text = f"Your text {had_python[python]} Python in it"
-    
-    return text
+        return f"Your text did not have Python in it"
 
 def most_common(words):
     # Hint: you'll need to count occurrences of each word
@@ -55,22 +45,27 @@ def unique_words(words):
     return unique_words_count
     
 def avg_length(words):
-    # Loop through the word list, get each length, calculate the average
-    lengths = []
-    for word in words:
-        lengths.append(len(word))
-        
-    avg_word_len = round(sum(lengths) / len(lengths),2)
-    
-    return avg_word_len
+
+    return round(sum(len(word) for word in words) / len(words),2)
     
 def title_case(words):
     # Print what the text would look like in Title Case
     # Do NOT use the built in title() method - try to do it manually
     upper_words = []
+    
+    # Geting reverse since we are appending from the end
     for word in words:
         new_word = word[0].upper() + word[1:]
-        
-        upper_words.insert(0, new_word)
+        upper_words.append(new_word)
     
-    return upper_words
+    new_words = " ".join(upper_words)
+    
+    return new_words
+
+
+def highest(words):
+    high_word, high_count = most_common(words)
+    if high_count == 1:
+        return "All words were unique, and only in your text 1 time."
+    else:
+        return f"The most common word [{high_word}] was in your text [{high_count}] times."

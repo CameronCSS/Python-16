@@ -34,7 +34,9 @@ def letter_list():
     return letters
 
 # 1. How many times each of those letters appear
-def letter_count(letters, user_text):
+def letter_count(user_text):
+    letters = letter_list()
+    
     # Store results
     letter_count = {}
     # If letter not found, store 0
@@ -48,12 +50,9 @@ def letter_count(letters, user_text):
 
 def vowel_count(words):
     # Count how many vowels (a, e, i, o, u) appear in the entire text
-    vowel_dict = {}
+    full_text = " ".join(words)
     vowel_list = ["a", "e", "i", "o", "u"]
-    for word in words:
-        for letter in word:
-            if letter in vowel_list:
-                vowel_dict[letter] = word.count(letter)
+    vowel_dict = {v: full_text.count(v) for v in vowel_list if v in full_text}
         
     # Print results
     
@@ -72,3 +71,8 @@ def first_last(user_text):
     last_letter = user_text[-1][-1]
     
     return first_letter, last_letter
+
+def show_first_last(user_text):
+        first, last = first_last(user_text)
+        print(f"First letter in your text was [{first}]")
+        print(f"Last letter in your text was [{last}]")
