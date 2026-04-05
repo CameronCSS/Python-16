@@ -53,7 +53,12 @@ def main():
     for num in selected:
         function_calls[num]()
         section_break()
+        
+    ans = input("Would you like to go again?? (y/n)").lower()
+    if ans == "y":
+        main()
+    else:
+        print("\n --- THANK YOU FOR USING MY TEXT PARSER --- \n")
     
 if __name__ == "__main__":
     main()
-    print("\n --- THANK YOU FOR USING MY TEXT PARSER --- \n")
