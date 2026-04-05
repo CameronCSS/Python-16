@@ -1,11 +1,4 @@
 *.json
 __pycache__/
-<<<<<<< HEAD
-<<<<<<< HEAD
 *.pyc
-=======
-*.pyc
->>>>>>> 8b5a5aadc78b46d57682a5ed131ae848e376a7b5
-=======
-*.pyc
->>>>>>> 8b5a5aadc78b46d57682a5ed131ae848e376a7b5
+
