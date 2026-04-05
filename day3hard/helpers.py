@@ -20,6 +20,7 @@ def spacer():
 def welcome():
     # Need to give printout some space
     clear()
+    # Welcome to the text parser
     return print("\n\n------WELCOME TO THE TEXT PARSER 3000------\n\n")
 
 def header():
@@ -30,7 +31,6 @@ def header():
 def to_continue():
     # Need to take enter to continue
     # Do I need this as its own function??
-    # possibly build more options, like start over?
     output = input("Press [Enter] to contnue.....")
     
     return
@@ -46,7 +46,7 @@ def section_break():
     to_continue()
     clear()
     header()
-    
+
 
 def menu(options):
     selected = []
