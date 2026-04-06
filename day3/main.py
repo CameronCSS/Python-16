@@ -3,7 +3,7 @@
 
 from letters import *
 from words import *
-from helpers import *
+from day4.helpers import *
 
 # Add Parsing options as I add them
 options = ["Letter count", "Word count", "First and Last", 
