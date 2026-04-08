@@ -116,8 +116,8 @@ class Game:
                 self.empty_spacer()
                 self.filled_spacer()
                 print(f"[{user_guess}] is too High. Try again.")
-                self.print_guesses()
                 self.guesses -= 1
+                self.print_guesses()
                 self.already_guessed.add(user_guess)
                 
             # Error catch if all else fails
