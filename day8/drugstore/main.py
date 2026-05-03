@@ -61,15 +61,12 @@ def main():
             case 1:
                 print()
                 perf_tickets()
-                continue
             case 2:
                 print()
                 med_tickets()
-                continue
             case 3:
                 print()
                 cosm_tickets()
-                continue
             case 'q':
                 break
         try:
