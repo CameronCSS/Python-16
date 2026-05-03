@@ -13,7 +13,8 @@ def give_number(function):
         This is the printout function that prints results from each generator object
         """
 
-        print(f'Your number is: {next(function)}')
+        print(f'Your number is: ')
+        print(f"[{next(function)}]")
         print('Please Wait... someone will be with you shortly. \n')
 
     return printout
@@ -25,7 +26,14 @@ def ticket_generator(prefix):
     Declaring in main function gives each decleration its own generator object.
     """
 
-    num = 1
     while True:
-        yield f"{prefix}-{num}"
-        num += 1
+        # Ticket numbers limited to 999 before resetting
+        for num in range(1,1000):
+            yield f"{prefix}-{num}"
+
+# Previously had 3 generator codes
+# We dont need separate generator codes.
+# THESE count as separate generators by declaration
+perf_tickets = give_number(ticket_generator('P'))
+med_tickets = give_number(ticket_generator('M'))
+cosm_tickets = give_number(ticket_generator('C'))
