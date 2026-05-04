@@ -74,8 +74,8 @@ def main():
         except ValueError:
             print('Please enter [y] or [n]')
         else:
-            if another == 'y':
-                continue
+            if another == 'n':
+                break
 
     print("\n--- Thank you. Have a good day ---\n")
 
