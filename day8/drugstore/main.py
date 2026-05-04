@@ -70,7 +70,7 @@ def main():
             case 'q':
                 break
         try:
-            another = input("Do you need another ticket? y/n").lower()
+            another = input("Do you need another ticket? y/n ").lower()
         except ValueError:
             print('Please enter [y] or [n]')
         else:
