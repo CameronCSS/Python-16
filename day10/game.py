@@ -620,8 +620,7 @@ class Game:
         scores = [
             ("Standard Ship: ", "100 pts"),
             ("Elite Ship (Blue): ", "200 pts"),
-            ("Ace Ship (Red): ", "300 pts"),
-            ("Bonus Life: ", "Exponential (5k, 10k, 20k...)")
+            ("Ace Ship (Red): ", "300 pts")
         ]
         for i, (label, value) in enumerate(scores):
             label_surf = body_font.render(label, True, text_color)
@@ -635,9 +634,8 @@ class Game:
         
         penalties = [
             ("Enemy Escapes: ", "-1000 pts"),
-            ("Enemy Laser: ", "-1 Life"),
-            ("Max Lives: ", "3"),
-            ("Game Over: ", "0 Lives Remaining")
+            ("Hit by enemy or Laser: ", "-1 Life"),
+            ("Max Lives: ", "3")
         ]
         for i, (label, value) in enumerate(penalties):
             label_surf = body_font.render(label, True, text_color)
@@ -651,10 +649,9 @@ class Game:
         self.screen.blit(b_head, (SCREEN_WIDTH - b_head.get_width() - 30, 150))
         
         boss_intel = [
-            ("Regular Boss: ", "10k (Doubles at 250k, 500k)"),
-            ("Mega Boss: ", "50k (Doubles at 250k, 500k)"),
-            ("Reward: ", "Reg-10k / Mega-25k"),
-            ("Bonus: ", "None")
+            ("Regular Boss: ", "Easy (20HP)"),
+            ("Mega Boss: ", "Hard (60HP)"),
+            ("Reward: ", "Reg-10k / Mega-25k")
         ]
         for i, (label, value) in enumerate(boss_intel):
             label_surf = body_font.render(label, True, text_color)
@@ -668,7 +665,7 @@ class Game:
         self.screen.blit(up_head, (400 - up_head.get_width() // 2, 400))
         
         bonuses = [
-            ("Triple Shot (TS): ", "Exponential (10k, 20k...)"),
+            ("Triple Shot (TS): ", "Earned on Life Overflow (or every 10k, 20k... etc.)"),
             ("OVERSHIELD: ", "Absorb 2 Hits (Every 100k pts)")
         ]
         for i, (label, value) in enumerate(bonuses):
