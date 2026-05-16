@@ -18,14 +18,33 @@ class SoundManager:
             'success': pygame.mixer.Sound(os.path.join(SOUNDS_PATH, SUCCESS_SOUND)),
             'lose_life': pygame.mixer.Sound(os.path.join(SOUNDS_PATH, LOSE_LIFE_SOUND)),
             'game_over': pygame.mixer.Sound(os.path.join(SOUNDS_PATH, GAME_OVER_SOUND)),
+            'fail': pygame.mixer.Sound(os.path.join(SOUNDS_PATH, FAIL_SOUND)),
+            'bonus': pygame.mixer.Sound(os.path.join(SOUNDS_PATH, BONUS_SOUND)),
+            'boss_kill': pygame.mixer.Sound(os.path.join(SOUNDS_PATH, 'boss_kill.mp3')),
+            'boss_hit': pygame.mixer.Sound(os.path.join(SOUNDS_PATH, 'boss_hit.mp3')),
+            'danger': pygame.mixer.Sound(os.path.join(SOUNDS_PATH, 'danger.mp3')),
+            'powerup': pygame.mixer.Sound(os.path.join(SOUNDS_PATH, 'powerup.mp3')),
+            'explosion2': pygame.mixer.Sound(os.path.join(SOUNDS_PATH, 'explosion2.mp3')),
         }
+        self.danger_channel = None
 
-    def play(self, name):
+    def play(self, name, loops=0):
         """Play a sound effect by name"""
-        self.sounds[name].play()
+        return self.sounds[name].play(loops=loops)
+
+    def play_danger(self):
+        """Play danger sound on loop"""
+        if not self.danger_channel:
+            self.danger_channel = self.play('danger', loops=-1)
+
+    def stop_danger(self):
+        """Stop the danger sound"""
+        if self.danger_channel:
+            self.danger_channel.stop()
+            self.danger_channel = None
 
     def play_music(self):
-        """Start looping background music"""
+        """Start looping regular background music"""
         mixer.music.load(os.path.join(SOUNDS_PATH, BG_MUSIC))
         mixer.music.set_volume(0.5)
         mixer.music.play(-1)
@@ -33,3 +52,7 @@ class SoundManager:
     def stop_music(self):
         """Stop background music"""
         mixer.music.stop()
+
+    def stop_all_sfx(self):
+        """Stop all sound effect channels (not music)"""
+        pygame.mixer.stop()
