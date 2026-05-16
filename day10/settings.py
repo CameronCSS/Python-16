@@ -9,6 +9,7 @@ SCREEN_HEIGHT = 600
 
 # Font (path and size — can't create Font object before pygame.init())
 FONT_PATH = 'Score.ttf'
+FONT_SIZE_XS = 18
 FONT_SIZE_SM = 24
 FONT_SIZE_MD = 32
 FONT_SIZE_LG = 64
@@ -39,20 +40,23 @@ PLAYER_REDX_IMG = 'redx.png'
 PLAYER_EXPLODE_IMG = 'Explode.png'
 ENEMY_VARIANTS = [
     {
-        'ship': 'enemy1.png', 'explode': 'enemyexplode1.png', 'laser': 'laser1.png',
-        'speed_mult': 1.0, 'fire_mult': 1.0, 'spawn_weight': 70
+        'ship': 'enemy1.png', 'explode': 'enemyexplosion1.png', 'laser': 'laser1.png',
+        'speed_mult': 1.0, 'fire_mult': 1.0, 'spawn_weight': 70, 'points': 100
     },
     {
-        'ship': 'enemy2.png', 'explode': 'enemyexplode2.png', 'laser': 'laser2.png',
-        'speed_mult': 1.5, 'fire_mult': 0.5, 'spawn_weight': 20
+        'ship': 'enemy2.png', 'explode': 'enemyexplosion2.png', 'laser': 'laser2.png',
+        'speed_mult': 1.5, 'fire_mult': 0.5, 'spawn_weight': 20, 'points': 200
     },
     {
-        'ship': 'enemy3.png', 'explode': 'enemyexplode3.png', 'laser': 'laser3.png',
-        'speed_mult': 2.0, 'fire_mult': 0.3, 'spawn_weight': 10
+        'ship': 'enemy3.png', 'explode': 'enemyexplosion3.png', 'laser': 'laser3.png',
+        'speed_mult': 2.0, 'fire_mult': 0.25, 'spawn_weight': 10, 'points': 300
     },
 ]
 FIREBALL_IMG = 'fireball.png'
-ICON_IMG = 'ufo.png'
+BLUE_FIREBALL_IMG = 'bluefireball.png'
+BOSS_IMG = 'boss.png'
+MEGA_BOSS_IMG = 'mega_boss.png'
+ICON_IMG = 'alien.png'
 BG_IMG = 'BG.jpg'
 
 # Sound filenames
@@ -63,4 +67,6 @@ ENEMY_SHOT_SOUND = 'enemy_shot.mp3'
 SUCCESS_SOUND = 'success.mp3'
 LOSE_LIFE_SOUND = 'lose_life.mp3'
 GAME_OVER_SOUND = 'game_over.mp3'
+FAIL_SOUND = 'fail.mp3'
+BONUS_SOUND = 'bonus.mp3'
 BG_MUSIC = 'bg_music.mp3'
