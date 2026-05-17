@@ -150,11 +150,14 @@ class Player:
                 self.fireballs.append({'x': self.x, 'y': self.y, 'x_ch': -2, 'y_ch': -self.fireball_speed, 'img': img})
                 self.fireballs.append({'x': self.x, 'y': self.y, 'x_ch': 2, 'y_ch': -self.fireball_speed, 'img': img})
                 sound_manager.play('fire')
+                return 3
             else:
                 # Single regular fireball
                 img = self.fireball_img
                 self.fireballs.append({'x': self.x, 'y': self.y, 'x_ch': 0, 'y_ch': -self.fireball_speed, 'img': img})
                 sound_manager.play('fire')
+                return 1
+        return 0
 
     def activate_triple_shot(self):
         """Enable triple shot for 20 seconds (1200 frames at 60fps)"""
@@ -167,7 +170,7 @@ class Player:
             self.overshield -= 1
             self.invincible = True
             self.invincible_timer = 0
-            sound_manager.play('bonus')
+            sound_manager.play('fail')
             return False
 
         self.explosion_visible = True
@@ -175,6 +178,7 @@ class Player:
         self.invincible = True
         self.invincible_timer = 0
         self.lives -= 1
+        self.triple_shot_timer = 0
         sound_manager.play('player_explosion')
         sound_manager.play('lose_life')
         return True

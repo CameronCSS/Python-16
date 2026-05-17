@@ -36,15 +36,31 @@ class Enemy:
             return # Don't move while exploding
 
         self.x += self.x_change
+        
+        # Sporadic movement for Elite (300 pt) enemy
+        if getattr(self, 'points', 0) == 300:
+            self.y += getattr(self, 'y_speed', 0)
+            if random.random() < 0.02: # 2% chance per frame (approx once a second)
+                direction = 1 if random.random() < 0.5 else -1
+                # Normal speed is heavily maintained, just switching directions or slightly accelerating
+                self.x_change = ENEMY_SPEED * self.speed_mult * direction * random.uniform(0.7, 1.2)
+                self.y_speed = random.uniform(-0.5, 1.5) # Gentle evasive vertical drift
+            
+            # Keep elite enemies from flying off the top
+            if self.y < 20:
+                self.y = 20
+                self.y_speed = abs(getattr(self, 'y_speed', 0))
 
         if self.x <= 5:
             self.x = 5
-            self.x_change *= -1
-            self.y += self.y_change
+            self.x_change = abs(self.x_change)
+            if getattr(self, 'points', 0) != 300:
+                self.y += self.y_change
         if self.x >= 730:
             self.x = 730
-            self.x_change *= -1
-            self.y += self.y_change
+            self.x_change = -abs(self.x_change)
+            if getattr(self, 'points', 0) != 300:
+                self.y += self.y_change
 
     def draw(self, screen):
         """Draw the enemy ship or its active explosion"""
