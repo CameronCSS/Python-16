@@ -8,10 +8,21 @@ from settings import *
 
 class Boss:
     def __init__(self, is_mega=False):
-        img_name = MEGA_BOSS_IMG if is_mega else BOSS_IMG
-        self.img = pygame.image.load(os.path.join(IMAGES_PATH, img_name))
-        self.laser_img = pygame.image.load(os.path.join(IMAGES_PATH, 'laser2.png'))
         self.is_mega = is_mega
+        if is_mega:
+            img_name = random.choice(['megaboss1.png', 'megaboss2.png'])
+        else:
+            img_name = random.choice(['boss1.png', 'boss2.png'])
+            
+        self.img = pygame.image.load(os.path.join(IMAGES_PATH, img_name))
+        if is_mega:
+            self.laser_frames = [
+                pygame.image.load(os.path.join(IMAGES_PATH, 'megabosslaser1.png')),
+                pygame.image.load(os.path.join(IMAGES_PATH, 'megabosslaser2.png'))
+            ]
+            self.laser_img = self.laser_frames[0]
+        else:
+            self.laser_img = pygame.image.load(os.path.join(IMAGES_PATH, 'bosslaser.png'))
         
         # Start at the top center
         self.width = self.img.get_width()
@@ -44,6 +55,7 @@ class Boss:
         self.is_exploding = False
         self.explosion_timer = 0
         self.explosion_duration = 45 # 9 frames * 5 ticks per frame
+        self.move_timer = 0
 
     def update(self):
         """Boss movement pattern or explosion update"""
@@ -54,13 +66,41 @@ class Boss:
         self.y += self.y_change
         self.x += self.x_change
         
-        # Stop descending at y=100
-        if self.y > 100:
-            self.y = 100
-            
+        # Initial descent
+        if not getattr(self, 'reached_altitude', False):
+            if self.y > 100:
+                self.y = 100
+                self.reached_altitude = True
+                if self.is_mega:
+                    self.y_change = 0 # Stop initial drop
+        else:
+            # Sporadic movement for Mega Boss
+            if self.is_mega:
+                self.move_timer += 1
+                if self.move_timer >= 40: # Evaluate roughly every 0.66 seconds
+                    self.move_timer = 0
+                    if random.random() < 0.7: # 70% chance to shift movement
+                        new_speed = random.uniform(2.5, 4.8) # Barely faster lateral speed bounds
+                        self.x_change = new_speed if random.random() < 0.5 else -new_speed
+                        self.y_change = random.uniform(-1.8, 1.8) # Barely faster vertical speed bounds
+                
+                # Vertical boundaries for Mega Boss
+                if self.y < 30:
+                    self.y = 30
+                    self.y_change = abs(self.y_change)
+                elif self.y > 250:
+                    self.y = 250
+                    self.y_change = -abs(self.y_change)
+            else:
+                self.y = 100 # Regular Boss stays locked
+
         # Bounce off walls
-        if self.x <= 10 or self.x >= SCREEN_WIDTH - self.width - 10:
-            self.x_change *= -1
+        if self.x <= 10:
+            self.x = 10
+            self.x_change = abs(self.x_change)
+        elif self.x >= SCREEN_WIDTH - self.width - 10:
+            self.x = SCREEN_WIDTH - self.width - 10
+            self.x_change = -abs(self.x_change)
         return False
 
     def draw(self, screen):

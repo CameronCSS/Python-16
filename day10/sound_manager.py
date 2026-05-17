@@ -10,6 +10,12 @@ from settings import *
 class SoundManager:
     def __init__(self):
         pygame.mixer.init()
+        # Allocate 64 channels to prevent standard sounds (fire, enemy explosions) from dropping
+        pygame.mixer.set_num_channels(64)
+        
+        # Reserve the first 8 channels for high-priority sounds so they are never interrupted
+        pygame.mixer.set_reserved(8)
+        
         self.sounds = {
             'fire': pygame.mixer.Sound(os.path.join(SOUNDS_PATH, FIRE_SOUND)),
             'enemy_explosion': pygame.mixer.Sound(os.path.join(SOUNDS_PATH, ENEMY_EXPLOSION_SOUND)),
@@ -25,23 +31,39 @@ class SoundManager:
             'danger': pygame.mixer.Sound(os.path.join(SOUNDS_PATH, 'danger.mp3')),
             'powerup': pygame.mixer.Sound(os.path.join(SOUNDS_PATH, 'powerup.mp3')),
             'explosion2': pygame.mixer.Sound(os.path.join(SOUNDS_PATH, 'explosion2.mp3')),
+            'multiply': pygame.mixer.Sound(os.path.join(SOUNDS_PATH, 'multiply.mp3')),
         }
-        self.danger_channel = None
+        
+        # Explicit priority channel mapping
+        self.priority_channels = {
+            'multiply': 0,        # Multiplier sound
+            'boss_kill': 1,         # Regular Boss explosion
+            'lose_life': 2,         # Taking damage
+            'bonus': 3,             # Gaining life / overshield
+            'player_explosion': 4,  # Player blowing up
+            'powerup': 5,           # Triple shot activated
+            'danger': 6,            # Boss incoming alarm
+            'game_over': 7          # Game over state
+        }
+        self.danger_channel = pygame.mixer.Channel(6)
 
     def play(self, name, loops=0):
-        """Play a sound effect by name"""
-        return self.sounds[name].play(loops=loops)
+        """Play a sound effect by name, routing priority sounds to their reserved channels"""
+        if name in self.priority_channels:
+            channel_id = self.priority_channels[name]
+            channel = pygame.mixer.Channel(channel_id)
+            channel.play(self.sounds[name], loops=loops)
+            return channel
+        else:
+            return self.sounds[name].play(loops=loops)
 
     def play_danger(self):
-        """Play danger sound on loop"""
-        if not self.danger_channel:
-            self.danger_channel = self.play('danger', loops=-1)
+        """Play danger sound on loop using its reserved channel"""
+        self.danger_channel.play(self.sounds['danger'], loops=-1)
 
     def stop_danger(self):
         """Stop the danger sound"""
-        if self.danger_channel:
-            self.danger_channel.stop()
-            self.danger_channel = None
+        self.danger_channel.stop()
 
     def play_music(self):
         """Start looping regular background music"""

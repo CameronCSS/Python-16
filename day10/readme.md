@@ -1,64 +1,44 @@
 # Aliens Attack: Arcade Evolution 🚀
 
-Day 10 of the Python course — a professional-grade, Object-Oriented arcade shooter featuring cinematic boss mechanics, deep statistics tracking, and high-fidelity spritesheet animations.
-
-## About
-
-**Aliens Attack!** is a high-performance arcade shooter built with **pygame-ce**. It features a modular class-based architecture, a comprehensive scoring system, and escalating "endurance-style" challenges that test your reflexes as you climb the leaderboard.
+Day 10 of the Python course — a classic arcade shooter built with **pygame-ce** featuring intense combat, dual scoring multipliers, and massive boss encounters.
 
 ## How to Play
 
 | Key | Action |
 |-----|--------|
-| Arrows | Move ship (Horizontal & Vertical) |
-| Space | Shoot fireball |
-| P | Pause / Resume |
-| H | View Mission Intel & Rules (from menu) |
-| R | Restart (on game over screen) |
-| ESC | Quit |
+| **Arrows** | Move ship |
+| **Space** | Fire fireballs (Hold for auto-fire) |
+| **P** | Pause / Resume |
+| **H** | Open Mission Intel / Rules (from main menu) |
+| **R** | Quick restart (on game over screen) |
+| **ESC** | Exit game |
 
-## Features
+## Game Preview
 
-- **Cinematic Boss Battles**:
-    - **Regular Boss**: Spawns every 10,000 points (interval doubles at 250k and 500k). High endurance (20 HP) with dual-laser capabilities.
-    - **Mega Boss**: Spawns every 50,000 points (interval doubles at 250k and 500k). Massive health pool (60 HP) for intense late-game standoffs.
-    - **Mega Boss Finale**: A spectacular 2-second **Cinematic Slow-Motion** sequence triggers upon defeat, isolating the background music and the thunderous **Explosion 2** audio.
-    - **Animated Destructions**: Custom chain-reaction explosions for both Regular and Mega Bosses (scaled up to 256x256).
-- **Advanced Player Mechanics**:
-    - **OVERSHIELD System**: Earned every 100,000 points. A tactical yellow health bar appears above the ship when active. It provides 2 layers of protection, shattering sequentially before any lives are lost.
-    - **Directional Banking**: Ship tilts visually (using `leftship.png`/`rightship.png`) when moving horizontally for a fluid flight feel.
-    - **Triple Shot**: Earned exponentially (10k, 20k, 40k...) or upon earning a life when at max health. Active for 30 seconds. Features a dedicated **Power-up Sound**.
-    - **Exponential Extra Lives**: Bonus lives become progressively harder to earn as your score climbs, demanding higher point thresholds (5k, 10k, 20k...) to keep the end-game challenge intense.
-- **High-Fidelity Animations**:
-    - **Dynamic Enemy Explosions**: Every enemy variant features a unique 4-frame animated destruction sequence (using custom 2x2 spritesheets) that is perfectly synchronized to the ship's specific type.
-    - **9-Frame Player Explosion**: Smoothly sequenced destruction animation using a custom 3x3 spritesheet.
-- **Statistics Tracking & After Action Report**:
-    - **Precision Engine**: Real-time tracking of Shots Fired vs. Shots Hit with accuracy percentage reporting.
-    - **Defense Status**: Color-coded "Escaped" counter (**Green** for perfect defense, **Red** for breaches).
-- **Enemy Variants**:
-    - **Standard Ship**: Steady and common (100 pts).
-    - **Elite Ship (Blue)**: Faster movement and high fire rate (200 pts).
-    - **Ace Ship (Red)**: Lethal double-speed invaders (300 pts).
-- **Difficulty & Defense**:
-    - **Fleet Expansion**: Two additional enemies join the invasion for every 25,000 points earned, capped at a massive **50 simultaneous enemies** (reached at ~550,000 points).
-    - **Elite Squadron Phasing**: Once the 50-enemy cap is hit, the game dynamically shifts spawn weights. Standard ships are slowly phased out, and by **1,000,000 points**, the entire invasion consists solely of Level 3 Ace Ships.
-    - **Escape Penalty**: Failing to stop an invader costs Earth **1000 points**.
+### 🎮 Gameplay Action
+![Gameplay Action](./images/gameplay.png)
 
-## Technical Details
 
-- **Language**: Python 3.14+
-- **Framework**: Pygame-ce
-- **Architecture**:
-    - `main.py`: Minimal entry point.
-    - `game.py`: Central hub for state management, cinematic slow-motion, and collisions.
-    - `player.py`: Weapon systems, OVERSHIELD HUD, and directional sprite banking.
-    - `boss.py`: Boss AI, health management, and animated death sequences.
-    - `enemy.py`: Weighted spawning, variant AI, and spritesheet animation handling.
-    - `sound_manager.py`: Centralized audio asset management with cinematic SFX isolation.
+## Cool Features
 
-## Future Ideas
+- **Double Multiplier System**: 
+  - **Skill Combo (x1 to x16)**: Kills without dying grow your combo. Resets back to x1 when you take a hit. High combo = massive score bonuses on normal invaders and boss hits!
+  - **Background Difficulty**: Scales up to 3x based on your overall score. Speeds up enemy spawn rates and boss pacing.
+- **Dynamic Boss Battles**:
+  - **Regular & Mega Bosses**: Spawn at score milestones. The intervals get wider at higher scores to give you breathing room.
+  - **Erratic Mega Boss**: Moves much faster, evades randomly, and shoots animated, plasma-flopping dual lasers!
+  - **Flawless Victory**: Kill a boss without losing a life to earn a glowing **"FLAWLESS!"** alert and a giant point bonus (+2k for regular, +5k for mega).
+  - **Overrun Mode**: Once you cross 1 Million points, enemies will **no longer despawn** when bosses arrive!
+- **High-Priority Alerts**: Life changes and flawless popups now render on top of every other game object and score alert.
+- **Overshield (Cyan Bar)**: Earned every 100k points. Absorbs 2 free hits before you lose lives. Plays `fail.mp3` when damaged to warn you.
+- **Triple Shot**: Earned at milestones or when gaining extra lives at full HP. Blasts three fireballs at once for 20 seconds.
+- **Squadron Phasing**: At 1 Million points, standard invaders phase out entirely, leaving only Level 3 Ace Ships.
 
-- **Particle Effects**: Visual debris and ship fragments for explosions.
-- **Screen Shake**: Impact feedback when taking damage or defeating bosses.
-- **Leaderboard**: Local high-score tracking.
-- **Multi-Phase Bosses**: Changing patterns and speeds as HP drops.
+## File Breakdown
+
+- `main.py`: Game entry point.
+- `game.py`: Handles main loop, collision logic, and screens.
+- `player.py`: Ship movement, auto-fire, triple shot, and shields.
+- `enemy.py`: Spawning, variant scaling, and explosion sheets.
+- `boss.py`: Randomized boss textures, movement patterns, and custom explosions.
+- `sound_manager.py`: Audio loading, volume levels, and prioritized sound channels.
