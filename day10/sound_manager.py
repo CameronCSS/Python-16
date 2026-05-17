@@ -32,6 +32,9 @@ class SoundManager:
             'powerup': pygame.mixer.Sound(os.path.join(SOUNDS_PATH, 'powerup.mp3')),
             'explosion2': pygame.mixer.Sound(os.path.join(SOUNDS_PATH, 'explosion2.mp3')),
             'multiply': pygame.mixer.Sound(os.path.join(SOUNDS_PATH, 'multiply.mp3')),
+            'tick': pygame.mixer.Sound(os.path.join(SOUNDS_PATH, 'tick.mp3')),
+            'boom': pygame.mixer.Sound(os.path.join(SOUNDS_PATH, 'boom.mp3')),
+            'missile': pygame.mixer.Sound(os.path.join(SOUNDS_PATH, 'missile.mp3')),
         }
         
         # Explicit priority channel mapping
@@ -64,6 +67,11 @@ class SoundManager:
     def stop_danger(self):
         """Stop the danger sound"""
         self.danger_channel.stop()
+
+    def stop_tick(self):
+        """Stop the tick sound if it is currently playing"""
+        if 'tick' in self.sounds:
+            self.sounds['tick'].stop()
 
     def play_music(self):
         """Start looping regular background music"""

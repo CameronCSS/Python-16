@@ -50,6 +50,12 @@ class Player:
         # Overshield system
         self.overshield = 0 # 0 or 1
 
+        # Missile system
+        self.missile_img = pygame.transform.scale(pygame.image.load(os.path.join(IMAGES_PATH, 'missile.png')).convert_alpha(), (20, 40))
+        self.missile_fired_img = pygame.transform.scale(pygame.image.load(os.path.join(IMAGES_PATH, 'missilefired.png')).convert_alpha(), (20, 40))
+        self.missiles = 0 # Number of missiles available (max 2)
+        self.active_missiles = [] # List of {'x': float, 'y': float, 'img': Surface}
+
         # Lives display images
         self.lives_img = pygame.image.load(os.path.join(IMAGES_PATH, PLAYER_LIVES_IMG))
         self.redx_img = pygame.image.load(os.path.join(IMAGES_PATH, PLAYER_REDX_IMG))
@@ -80,6 +86,12 @@ class Player:
             if fb['y'] < -100 or fb['x'] < -20 or fb['x'] > SCREEN_WIDTH + 20:
                 self.fireballs.remove(fb)
 
+        # Missiles movement (slower than fireballs but a bit faster now)
+        for m in self.active_missiles[:]:
+            m['y'] -= 6 # Slower than fireball speed (10) but faster than before (4)
+            if m['y'] < -100:
+                self.active_missiles.remove(m)
+
         # Explosion timer
         if self.explosion_visible:
             self.explosion_timer += 1
@@ -108,9 +120,23 @@ class Player:
         if not (self.invincible and (self.invincible_timer // 6) % 2 == 0):
             screen.blit(sprite, (self.x, self.y))
 
+        # Draw missiles sitting on ship sides (up to 4 double-stacked)
+        if self.missiles >= 1:
+            screen.blit(self.missile_img, (self.x - 14, self.y + 12))
+        if self.missiles >= 2:
+            screen.blit(self.missile_img, (self.x + 58, self.y + 12))
+        if self.missiles >= 3:
+            screen.blit(self.missile_img, (self.x - 28, self.y + 12))
+        if self.missiles >= 4:
+            screen.blit(self.missile_img, (self.x + 72, self.y + 12))
+
         # Draw fireballs
         for fb in self.fireballs:
             screen.blit(fb['img'], (fb['x'] + 16, fb['y'] + 10))
+
+        # Draw active missiles in flight
+        for m in self.active_missiles:
+            screen.blit(m['img'], (m['x'], m['y']))
 
         # Draw player explosion animation
         if self.explosion_visible:
@@ -183,6 +209,27 @@ class Player:
         sound_manager.play('lose_life')
         return True
 
+    def fire_missile(self, sound_manager):
+        """Fire one missile if available. Returns True if fired."""
+        if self.missiles > 0:
+            self.missiles -= 1
+            # Fire outer ones first before inner ones
+            if self.missiles == 3: # 4th missile
+                mx = self.x + 72 + 2
+            elif self.missiles == 2: # 3rd missile
+                mx = self.x - 28 + 2
+            elif self.missiles == 1: # 2nd missile
+                mx = self.x + 58 + 2
+            else: # 1st missile
+                mx = self.x - 14 + 2
+            self.active_missiles.append({
+                'x': mx, 'y': self.y,
+                'img': self.missile_fired_img
+            })
+            sound_manager.play('missile')
+            return True
+        return False
+
     def reset(self):
         """Full reset for game restart"""
         self.x = 368
@@ -190,6 +237,8 @@ class Player:
         self.x_change = 0
         self.lives = 3
         self.fireballs = []
+        self.active_missiles = []
+        self.missiles = 0
         self.triple_shot_timer = 0
         self.explosion_visible = False
         self.invincible = False
