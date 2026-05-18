@@ -64,7 +64,30 @@ class Game:
         self.laser_interval = LASER_INTERVAL_MAX
         self.boss = None
         self.active_boss_lasers = []
+        self.active_boss_bombs = [] # Seeking homing bombs
+        self.boss_bomb_frames = [
+            pygame.transform.scale(pygame.image.load(os.path.join(IMAGES_PATH, 'bomb1.png')).convert_alpha(), (32, 32)),
+            pygame.transform.scale(pygame.image.load(os.path.join(IMAGES_PATH, 'bomb2.png')).convert_alpha(), (32, 32))
+        ]
+        
+        ex_sheet = pygame.image.load(os.path.join(IMAGES_PATH, 'bombexplode.png')).convert_alpha()
+        self.bomb_ex_frames = []
+        frame_w = ex_sheet.get_width() // 3
+        frame_h = ex_sheet.get_height()
+        for i in range(3):
+            frame = pygame.Surface((frame_w, frame_h), pygame.SRCALPHA)
+            frame.blit(ex_sheet, (0, 0), (i * frame_w, 0, frame_w, frame_h))
+            self.bomb_ex_frames.append(pygame.transform.scale(frame, (64, 64)))
         self.boss_flawless = False
+        
+        # Crate drop system (replacing old missile pickup)
+        self.crate_img = pygame.transform.scale(pygame.image.load(os.path.join(IMAGES_PATH, 'crate.png')).convert_alpha(), (32, 32))
+        self.crate2_img = pygame.transform.scale(pygame.image.load(os.path.join(IMAGES_PATH, 'crate2.png')).convert_alpha(), (32, 32))
+        self.active_pickups = [] # List of {'x': float, 'y': float, 'type': str}
+        self.missile_kills_count = 0
+        self.missile_kills_target = 100
+        self.active_missile_explosions = [] # List of {'x': float, 'y': float, 'timer': int}
+        
         self.stats = self._init_stats()
 
         # Start music
@@ -191,6 +214,14 @@ class Game:
                 shots_fired = self.player.shoot(self.sound_manager)
                 if shots_fired:
                     self.stats['shots_fired'] += shots_fired
+            
+            # Missile fire (Shift key - single press only)
+            if keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]:
+                if not getattr(self, '_shift_held', False):
+                    self._shift_held = True
+                    self.player.fire_missile(self.sound_manager)
+            else:
+                self._shift_held = False
 
             # Update and draw player
             self.player.update()
@@ -252,6 +283,17 @@ class Game:
                             elif enemy.points == 300:
                                 self.stats['enemies_killed'][2] += 1
                             
+                            # Missile pickup crate drop with dynamic scaling based on progression score
+                            self.missile_kills_count += 1
+                            if self.missile_kills_count >= self.missile_kills_target:
+                                self.missile_kills_count = 0
+                                # Target kills grows by 15 for every 50,000 progression score
+                                self.missile_kills_target = 100 + int(self.progression_score // 50000) * 15
+                                self.active_pickups.append({'x': enemy.x + 16, 'y': enemy.y, 'type': 'missile'})
+                                self._add_floating_text("MISSILE CRATE DROP!", -1, 100, COLOR_CYAN,
+                                                        duration=120, y_speed=-1, font_size=FONT_SIZE_MD)
+                                self.sound_manager.play('bonus')
+                            
                             enemy.explode(self.sound_manager)
                             break
                             # enemy.respawn() <-- Removed: update() handles this after explosion
@@ -273,7 +315,7 @@ class Game:
                 if not enemy.explosion_visible and enemy.y > 560:
                     penalty = int(1000 * self.get_difficulty_multiplier())
                     self.score = max(0, self.score - penalty)
-                    self.progression_score = max(0, self.progression_score - penalty)
+                    self.progression_score = max(0, self.progression_score - 200) # Lighter progression hit
                     self.sound_manager.play('fail')
                     self._add_floating_text(f"-{penalty:,}", enemy.x, 540, COLOR_RED)
                     self.stats['enemies_escaped'] += 1
@@ -318,7 +360,11 @@ class Game:
                             self._check_score_milestones(old_progression)
                             self._add_floating_text(f"{pts:,}", fb['x'], fb['y'], color)
                             
-                            if self.boss.hit():
+                            is_dead, should_spawn_bomb = self.boss.hit()
+                            if should_spawn_bomb:
+                                self._spawn_boss_bomb()
+                                
+                            if is_dead:
                                 # Boss Killed!
                                 kill_score = 25000 if self.boss.is_mega else 10000
                                 kill_text = "MEGA BOSS KILL!" if self.boss.is_mega else "BOSS KILL!"
@@ -375,6 +421,90 @@ class Game:
                                 # self.enemies = ... <-- Removed: will be handled by update()
                                 break
                 
+                # Check missile hits boss
+                if self.boss and not self.boss.is_exploding:
+                    boss_rect = pygame.Rect(self.boss.x, self.boss.y, self.boss.width, self.boss.height)
+                    for m in self.player.active_missiles[:]:
+                        m_rect = pygame.Rect(m['x'], m['y'], 20, 40)
+                        if boss_rect.colliderect(m_rect):
+                            if m in self.player.active_missiles:
+                                self.player.active_missiles.remove(m)
+                            
+                            # Massive damage: regular boss has 20HP, mega has 60HP
+                            # Missile deals 20 damage (kills regular in 1, mega in 3 but we want 2)
+                            missile_damage = 30 if self.boss.is_mega else 20
+                            for _ in range(missile_damage):
+                                is_dead, should_spawn_bomb = self.boss.hit()
+                                if should_spawn_bomb:
+                                    self._spawn_boss_bomb()
+                                if is_dead:
+                                    break
+                            
+                            # Missile explosion effect
+                            self.active_missile_explosions.append({'x': m_rect.x - 22, 'y': m_rect.y - 12, 'timer': 0})
+                            self.sound_manager.play('boom')
+                            
+                            self._add_floating_text("MISSILE HIT!", self.boss.x + 20, self.boss.y, COLOR_CYAN,
+                                                    duration=90, y_speed=-2, font_size=FONT_SIZE_MD)
+                            
+                            if is_dead:
+                                # Boss Killed by missile!
+                                kill_score = 25000 if self.boss.is_mega else 10000
+                                kill_text = "MEGA BOSS KILL!" if self.boss.is_mega else "BOSS KILL!"
+                                
+                                if self.boss.is_mega:
+                                    self.sound_manager.play('explosion2')
+                                
+                                old_progression = self.progression_score
+                                self.score += kill_score
+                                diff_mult = self.get_difficulty_multiplier()
+                                prog_kill = int(kill_score * diff_mult)
+                                self.progression_score += prog_kill
+                                self._check_score_milestones(old_progression)
+                                
+                                self.player.activate_triple_shot()
+                                self.player.triple_shot_timer = 1800
+                                self.sound_manager.play('powerup')
+                                self.player.invincible = True
+                                self.player.invincible_timer = -60
+                                
+                                if self.boss_flawless:
+                                    flawless_score = 5000 if self.boss.is_mega else 2000
+                                    self.score += flawless_score
+                                    prog_flawless = int(flawless_score * diff_mult)
+                                    self.progression_score += prog_flawless
+                                    self._add_floating_text("FLAWLESS!", -1, 150, COLOR_ORANGE, duration=180, font_size=FONT_SIZE_MD)
+                                    flawless_color = COLOR_ORANGE if self.boss.is_mega else COLOR_BLUE
+                                    self._add_floating_text(f"{flawless_score:,}", -1, 200, flawless_color, duration=180, font_size=FONT_SIZE_MD)
+                                    self.boss_flawless = False
+                                
+                                self._add_floating_text(kill_text, -1, 250, COLOR_GREEN,
+                                                        duration=180, y_speed=-1, font_size=FONT_SIZE_MD)
+                                self._add_floating_text(f"{kill_score:,}", -1, 320, COLOR_YELLOW,
+                                                        duration=180, y_speed=-1, font_size=FONT_SIZE_MD)
+                                self.sound_manager.play('boss_kill')
+                                self.sound_manager.stop_danger()
+                                
+                                if self.boss.is_mega:
+                                    self.stats['mega_bosses_defeated'] += 1
+                                else:
+                                    self.stats['bosses_defeated'] += 1
+                            break
+
+                # Check missiles hit enemies
+                for m in self.player.active_missiles[:]:
+                    m_rect = pygame.Rect(m['x'], m['y'], 20, 40)
+                    for enemy in self.enemies:
+                        if not enemy.explosion_visible:
+                            enemy_rect = pygame.Rect(enemy.x, enemy.y, enemy.img.get_width(), enemy.img.get_height())
+                            if m_rect.colliderect(enemy_rect):
+                                if m in self.player.active_missiles:
+                                    self.player.active_missiles.remove(m)
+                                self.active_missile_explosions.append({'x': enemy.x - 12, 'y': enemy.y - 12, 'timer': 0})
+                                self.sound_manager.play('boom')
+                                enemy.explode(self.sound_manager)
+                                break
+
                 # Boss hits player directly
                 if self.boss and not self.boss.is_exploding and not self.player.invincible:
                     boss_rect = pygame.Rect(self.boss.x, self.boss.y, self.boss.width, self.boss.height)
@@ -402,6 +532,9 @@ class Game:
                         self.combo_kills = 0
                         self._add_floating_text("-1 LIFE", 350, 400, COLOR_RED, 
                                                 duration=90, y_speed=-2, font_size=FONT_SIZE_MD)
+
+            # Missile pickups and explosion animations
+            self._update_pickups_and_missile_explosions()
 
             # Floating text display (+score, -penalty, flawless, lives)
             # Sort so "FLAWLESS" texts are rendered last to always sit on top of all other alert texts
@@ -452,10 +585,12 @@ class Game:
 
         # Overshield every 100k
         if (old_progression // 100000) < (self.progression_score // 100000):
-            self.player.overshield = 2
-            self._add_floating_text("OVERSHIELD!", -1, 350, COLOR_CYAN, 
-                                    duration=120, y_speed=-1, font_size=FONT_SIZE_MD)
-            self.sound_manager.play('powerup')
+            import random
+            rx = random.randint(100, SCREEN_WIDTH - 100)
+            self.active_pickups.append({'x': rx, 'y': -40, 'type': 'overshield'})
+            self._add_floating_text("OVERSHIELD CARGO INBOUND!", -1, 100, COLOR_CYAN, 
+                                    duration=150, y_speed=-0.5, font_size=FONT_SIZE_MD)
+            self.sound_manager.play('bonus')
 
         # Exponential Life Gain
         while self.progression_score >= self.next_life_score:
@@ -616,11 +751,176 @@ class Game:
                 if bl in self.active_boss_lasers:
                     self.active_boss_lasers.remove(bl)
 
+        # Update and draw boss bombs (seeking homing projectiles)
+        for bb in self.active_boss_bombs[:]:
+            if bb.get('exploding', False):
+                # Handle explosion animation
+                bb['ex_timer'] += 1
+                if bb['ex_timer'] >= 15: # 3 frames * 5 ticks
+                    if bb in self.active_boss_bombs:
+                        self.active_boss_bombs.remove(bb)
+                    continue
+                frame_idx = min(2, bb['ex_timer'] // 5)
+                # Offset by -16 to center the 64x64 explosion over the 32x32 bomb
+                self.screen.blit(self.bomb_ex_frames[frame_idx], (bb['x'] - 16, bb['y'] - 16))
+                continue
+
+            # Update timer and blinking
+            bb['timer'] -= 1
+            if bb['timer'] <= 0:
+                bb['exploding'] = True
+                self.sound_manager.stop_tick()
+                self.sound_manager.play('boom')
+                continue
+
+            # Blinking gets faster as timer drops (from ~15 frames down to 2 frames)
+            blink_speed = max(2, int((bb['timer'] / 120) * 15))
+            bb['anim_timer'] += 1
+            if bb['anim_timer'] >= blink_speed:
+                bb['anim_timer'] = 0
+                bb['frame_idx'] = 1 - bb['frame_idx']
+                self.sound_manager.play('tick')
+                
+            self.screen.blit(self.boss_bomb_frames[bb['frame_idx']], (bb['x'], bb['y']))
+            
+            # Draw bomb health bar
+            bar_width = 32
+            pygame.draw.rect(self.screen, (255, 0, 0), (bb['x'], bb['y'] - 8, bar_width, 4))
+            pygame.draw.rect(self.screen, (0, 255, 0), (bb['x'], bb['y'] - 8, bar_width * (bb['hp'] / bb['max_hp']), 4))
+
+            # True 2D full-directional homing towards player center
+            player_center_x = self.player.x + 32 # Ship is 64x64
+            player_center_y = self.player.y + 32
+            bomb_center_x = bb['x'] + 16 # Bomb is 32x32
+            bomb_center_y = bb['y'] + 16
+            
+            dx = player_center_x - bomb_center_x
+            dy = player_center_y - bomb_center_y
+            dist = math.hypot(dx, dy)
+            
+            seek_speed = 3.5 # Extremely responsive 2D seek speed
+            if dist != 0:
+                bb['x'] += (dx / dist) * seek_speed
+                bb['y'] += (dy / dist) * seek_speed
+                
+            bomb_rect = pygame.Rect(bb['x'], bb['y'], 32, 32)
+
+            # Check collision with player's fireballs
+            hit_by_player = False
+            for fb in self.player.fireballs[:]:
+                fb_rect = pygame.Rect(fb['x'], fb['y'], fb['img'].get_width(), fb['img'].get_height())
+                if bomb_rect.colliderect(fb_rect):
+                    if fb in self.player.fireballs:
+                        self.player.fireballs.remove(fb)
+                    
+                    bb['hp'] -= 1
+                    if bb['hp'] <= 0:
+                        bb['exploding'] = True
+                        self.sound_manager.stop_tick()
+                        self.sound_manager.play('boom')
+                        hit_by_player = True
+                        # Reward for shooting a bomb out of the sky
+                        self.score += 500
+                        self._add_floating_text("500", bb['x'], bb['y'], COLOR_CYAN)
+                    else:
+                        self.sound_manager.play('boss_hit')
+                    break
+                    
+            if hit_by_player:
+                continue
+
+            # Check proximity collision with player (64x64 trigger area)
+            if not self.player.invincible:
+                proximity_rect = pygame.Rect(bb['x'] - 16, bb['y'] - 16, 64, 64)
+                player_rect = pygame.Rect(self.player.x, self.player.y, 64, 64)
+                if proximity_rect.colliderect(player_rect):
+                    if self.player.hit(self.sound_manager):
+                        self.stats['lives_lost'] += 1
+                        self.boss_flawless = False
+                        self.combo_kills = 0
+                        self._add_floating_text("-1 LIFE", 350, 400, COLOR_RED, 
+                                                duration=90, y_speed=-2, font_size=FONT_SIZE_MD)
+                    bb['exploding'] = True
+                    self.sound_manager.stop_tick()
+                    self.sound_manager.play('boom')
+                    continue
+                    
+            if bb['y'] > SCREEN_HEIGHT:
+                if bb in self.active_boss_bombs:
+                    self.active_boss_bombs.remove(bb)
+
+    def _spawn_boss_bomb(self):
+        """Spawn a semi-homing bomb from the center of the boss"""
+        if self.boss:
+            bx = self.boss.x + self.boss.width // 2 - 20
+            by = self.boss.y + self.boss.height - 20
+            self.active_boss_bombs.append({
+                'x': bx, 'y': by,
+                'timer': 300, # 5 seconds at 60fps
+                'frame_idx': 0,
+                'anim_timer': 0,
+                'exploding': False,
+                'ex_timer': 0,
+                'hp': 2,
+                'max_hp': 2
+            })
+            self.sound_manager.play('enemy_shot')
+
+    def _update_pickups_and_missile_explosions(self):
+        """Update and draw missile and overshield crate pickups falling and missile explosions"""
+        # Draw falling pickups (missile crates and overshield crates)
+        for pickup in self.active_pickups[:]:
+            img = self.crate_img if pickup['type'] == 'missile' else self.crate2_img
+            self.screen.blit(img, (pickup['x'], pickup['y']))
+            pickup['y'] += 2 # Slow descent
+            
+            # Player collects pickup
+            pickup_rect = pygame.Rect(pickup['x'], pickup['y'], 32, 32)
+            player_rect = pygame.Rect(self.player.x, self.player.y, 64, 64)
+            if pickup_rect.colliderect(player_rect):
+                self.active_pickups.remove(pickup)
+                self.sound_manager.play('powerup') # Plays powerup.mp3
+                
+                if pickup['type'] == 'missile':
+                    if self.player.missiles >= 4:
+                        if self.player.lives < 3:
+                            self.player.lives += 1
+                            self.stats['lives_earned'] += 1
+                            self.sound_manager.play('bonus')
+                            self._add_floating_text("+1 LIFE", -1, 350, COLOR_GREEN,
+                                                    duration=90, y_speed=-2, font_size=FONT_SIZE_MD)
+                        else:
+                            self.score += 2000
+                            self._add_floating_text("+2,000 PTS (MAX MISSILES)", -1, 350, COLOR_YELLOW,
+                                                    duration=90, y_speed=-2, font_size=FONT_SIZE_MD)
+                            self.sound_manager.play('bonus')
+                    else:
+                        self.player.missiles = min(4, self.player.missiles + 2) # Instantly mounts and shows missiles
+                        self._add_floating_text("+2 MISSILES!", -1, 350, COLOR_CYAN,
+                                                duration=90, y_speed=-2, font_size=FONT_SIZE_MD)
+                elif pickup['type'] == 'overshield':
+                    self.player.overshield = 2
+                    self._add_floating_text("OVERSHIELD CHARGED!", -1, 350, COLOR_YELLOW,
+                                            duration=90, y_speed=-2, font_size=FONT_SIZE_MD)
+                continue
+            
+            if pickup['y'] > SCREEN_HEIGHT:
+                self.active_pickups.remove(pickup)
+        
+        # Draw missile explosions (reuse bomb explosion frames)
+        for me in self.active_missile_explosions[:]:
+            me['timer'] += 1
+            if me['timer'] >= 15:
+                self.active_missile_explosions.remove(me)
+                continue
+            frame_idx = min(2, me['timer'] // 5)
+            self.screen.blit(self.bomb_ex_frames[frame_idx], (me['x'], me['y']))
+
     def _draw_score(self):
         """Draw the score in the top-right and the combo multiplier in the top-middle"""
         score_text = self.font.render(f"Score: {self.score:,}", True, COLOR_WHITE)
         self.screen.blit(score_text, (SCREEN_WIDTH - score_text.get_width() - 20, 10))
-
+        
         # Combo Multiplier (Top-Middle)
         combo = self.get_combo_multiplier()
         combo_text = f"x{combo}"
@@ -820,7 +1120,8 @@ class Game:
         
         bonuses = [
             ("Triple Shot (TS): ", "Earned on Life Overflow (or every 10k, 20k... etc.)"),
-            ("OVERSHIELD: ", "Absorb 2 Hits (Every 100k pts)")
+            ("OVERSHIELD: ", "Absorb 2 Hits (Every 100k pts)"),
+            ("MISSILES: ", "Press SHIFT to Fire. 2 per Crate (Spawned from enemy kills)")
         ]
         for i, (label, value) in enumerate(bonuses):
             label_surf = body_font.render(label, True, text_color)
@@ -860,9 +1161,19 @@ class Game:
         self.laser_interval = LASER_INTERVAL_MAX
         self.boss = None
         self.active_boss_lasers = []
+        self.active_boss_bombs = []
         self.boss_flawless = False
         self.floating_texts = []
         self.last_life_bonus = 0
+        self.next_life_score = 5000
+        self.next_ts_score = 10000
+        self.next_boss_score = 10000
+        self.next_mega_score = 50000
+        self.active_pickups = []
+        self.active_missile_explosions = []
+        self.missile_kills_count = 0
+        self.missile_kills_target = 100
+        self._shift_held = False
         self.stats = self._init_stats()
         self.sound_manager.play_music()
 

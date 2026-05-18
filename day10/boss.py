@@ -56,6 +56,7 @@ class Boss:
         self.explosion_timer = 0
         self.explosion_duration = 45 # 9 frames * 5 ticks per frame
         self.move_timer = 0
+        self.fired_bombs = set() # Track already-triggered health milestones
 
     def update(self):
         """Boss movement pattern or explosion update"""
@@ -71,28 +72,24 @@ class Boss:
             if self.y > 100:
                 self.y = 100
                 self.reached_altitude = True
-                if self.is_mega:
-                    self.y_change = 0 # Stop initial drop
+                self.y_change = 0 # Stop initial drop
         else:
-            # Sporadic movement for Mega Boss
-            if self.is_mega:
-                self.move_timer += 1
-                if self.move_timer >= 40: # Evaluate roughly every 0.66 seconds
-                    self.move_timer = 0
-                    if random.random() < 0.7: # 70% chance to shift movement
-                        new_speed = random.uniform(2.5, 4.8) # Barely faster lateral speed bounds
-                        self.x_change = new_speed if random.random() < 0.5 else -new_speed
-                        self.y_change = random.uniform(-1.8, 1.8) # Barely faster vertical speed bounds
-                
-                # Vertical boundaries for Mega Boss
-                if self.y < 30:
-                    self.y = 30
-                    self.y_change = abs(self.y_change)
-                elif self.y > 250:
-                    self.y = 250
-                    self.y_change = -abs(self.y_change)
-            else:
-                self.y = 100 # Regular Boss stays locked
+            # Sporadic movement for both Regular & Mega Boss
+            self.move_timer += 1
+            if self.move_timer >= 40: # Evaluate roughly every 0.66 seconds
+                self.move_timer = 0
+                if random.random() < 0.7: # 70% chance to shift movement
+                    new_speed = random.uniform(2.5, 4.8) # Sporadic lateral speed bounds
+                    self.x_change = new_speed if random.random() < 0.5 else -new_speed
+                    self.y_change = random.uniform(-1.8, 1.8) # Sporadic vertical speed bounds
+            
+            # Vertical boundaries for both Regular & Mega Boss
+            if self.y < 30:
+                self.y = 30
+                self.y_change = abs(self.y_change)
+            elif self.y > 250:
+                self.y = 250
+                self.y_change = -abs(self.y_change)
 
         # Bounce off walls
         if self.x <= 10:
@@ -122,11 +119,28 @@ class Boss:
             pygame.draw.rect(screen, (0, 255, 0), (self.x, self.y - 20, bar_width * (self.hp / self.max_hp), 10))
 
     def hit(self):
-        """Take damage"""
+        """Take damage
+        Returns a tuple: (is_dead, should_spawn_bomb)
+        """
         if self.is_exploding:
-            return False
+            return False, False
         self.hp -= 1
+        
+        # Check health milestones for seeking bomb release
+        should_spawn_bomb = False
+        if self.is_mega:
+            if self.hp <= 45 and 45 not in self.fired_bombs:
+                self.fired_bombs.add(45)
+                should_spawn_bomb = True
+            elif self.hp <= 15 and 15 not in self.fired_bombs:
+                self.fired_bombs.add(15)
+                should_spawn_bomb = True
+        else:
+            if self.hp <= 10 and 10 not in self.fired_bombs:
+                self.fired_bombs.add(10)
+                should_spawn_bomb = True
+                
         if self.hp <= 0:
             self.is_exploding = True
-            return True
-        return False
+            return True, should_spawn_bomb
+        return False, should_spawn_bomb
