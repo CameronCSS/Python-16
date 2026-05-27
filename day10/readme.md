@@ -6,7 +6,7 @@ Day 10 of the Python course — a classic arcade shooter built with **pygame-ce*
 
 | Key | Action |
 |-----|--------|
-| **Arrows** | Move ship |
+| **WASD** | Move ship |
 | **Space** | Fire fireballs (Hold for auto-fire) |
 | **P** | Pause / Resume |
 | **H** | Open Mission Intel / Rules (from main menu) |
