@@ -194,18 +194,18 @@ class Game:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_p:
                         self.paused = True
-                    if event.key == pygame.K_LEFT:
+                    if event.key == pygame.K_a:
                         self.player.x_change = -PLAYER_SPEED
-                    if event.key == pygame.K_RIGHT:
+                    if event.key == pygame.K_d:
                         self.player.x_change = PLAYER_SPEED
-                    if event.key == pygame.K_UP:
+                    if event.key == pygame.K_w:
                         self.player.y_change = -PLAYER_SPEED
-                    if event.key == pygame.K_DOWN:
+                    if event.key == pygame.K_s:
                         self.player.y_change = PLAYER_SPEED
                 if event.type == pygame.KEYUP:
-                    if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
+                    if event.key == pygame.K_a or event.key == pygame.K_d:
                         self.player.x_change = 0
-                    if event.key == pygame.K_UP or event.key == pygame.K_DOWN:
+                    if event.key == pygame.K_w or event.key == pygame.K_s:
                         self.player.y_change = 0
 
             # Auto-fire logic (allow holding spacebar)
@@ -1042,7 +1042,7 @@ class Game:
 
         title_text = title_font.render("ALIENS ATTACK!", True, (192, 25, 51))
         desc1 = desc_font.render("Defend Earth from the alien invasion!", True, COLOR_WHITE)
-        controls = desc_font.render("ARROWS to Move  |  SPACE to Shoot  |  P to Pause", True, COLOR_GRAY)
+        controls = desc_font.render("WASD to Move  |  SPACE to Shoot  |  P to Pause", True, COLOR_GRAY)
         rules_prompt = desc_font.render("Press H for Rules & Scoring", True, COLOR_CYAN)
         prompt_text = prompt_font.render("Press ANY OTHER KEY to Start", True, COLOR_YELLOW)
 
